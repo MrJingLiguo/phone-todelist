@@ -76,6 +76,8 @@ class ReminderService {
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       matchDateTimeComponents: comp,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
       payload: 'task:$id',
     );
   }
@@ -120,7 +122,7 @@ class CalendarService {
       description: '由语音待办创建',
     );
     final r = await _plugin.createOrUpdateEvent(event);
-    return r.isSuccess && r.data != null;
+    return (r?.isSuccess ?? false) && (r?.data != null);
   }
 }
 

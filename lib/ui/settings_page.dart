@@ -16,7 +16,7 @@ class SettingsPage extends StatelessWidget {
             child: Text('权限', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
           FutureBuilder<PermissionStatus>(
-            future: Permission.microphone.status(),
+            future: Permission.microphone.status,
             builder: (context, snap) {
               final ok = snap.data == PermissionStatus.granted;
               return ListTile(

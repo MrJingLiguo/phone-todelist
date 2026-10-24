@@ -1,4 +1,5 @@
 /// 语音指令解析结果的数据模型与展示辅助（纯 Dart，可单测）。
+library;
 
 enum IntentType { addTask, addEvent, setAlarm, completeTask, deleteTask, query, unknown }
 

@@ -3,3 +3,10 @@ include: package:flutter_lints/flutter.yaml
 analyzer:
   errors:
     deprecated_member_use: ignore
+
+linter:
+  rules:
+    # const 类风格 lint 噪音大且不影响正确性，关闭（CI 只挡 error/warning/info 计数）
+    prefer_const_constructors: false
+    prefer_const_declarations: false
+    prefer_const_literals_to_create_immutables: false

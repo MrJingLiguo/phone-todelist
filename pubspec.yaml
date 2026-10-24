@@ -20,7 +20,8 @@ dependencies:
   device_calendar: ^4.3.0
   permission_handler: ^11.3.1
   record: ^5.1.2
-  sherpa_onnx: ^1.10.0
+  # 1.12+ 改了 API（modelConfig→model），钉在经典 API 版本
+  sherpa_onnx: 1.10.46
 
 dev_dependencies:
   flutter_test:

@@ -11,7 +11,7 @@ class SherpaStt {
   SherpaStt._(this._recognizer);
 
   final sherpa.OnlineRecognizer _recognizer;
-  sherpa.OnlineRecognizerStream? _stream;
+  sherpa.OnlineStream? _stream;
   String _committed = '';
 
   static const _files = [

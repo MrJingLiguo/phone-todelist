@@ -45,9 +45,8 @@ class IntentParser {
         return const ParsedIntent(
             type: IntentType.unknown, hint: '没听出闹钟时间，试试：“设个明早七点的闹钟”');
       }
-      final t = title.isEmpty
-          ? '闹钟 ${two(tp.start.hour)}:${two(tp.start.minute)}'
-          : title;
+      final st = tp.start!;
+      final t = title.isEmpty ? '闹钟 ${two(st.hour)}:${two(st.minute)}' : title;
       return ParsedIntent(
           type: IntentType.setAlarm,
           title: t,

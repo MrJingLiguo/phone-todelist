@@ -77,7 +77,7 @@ class _HomePageState extends State<HomePage> {
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               TextButton.icon(
-                onPressed: () => showTaskEditor(context),
+                onPressed: () => TaskEditor.show(context),
                 icon: const Icon(Icons.edit_note, size: 18),
                 label: const Text('手动添加'),
               ),
