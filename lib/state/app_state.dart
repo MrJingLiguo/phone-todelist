@@ -103,8 +103,8 @@ class AppState extends ChangeNotifier {
         encoder: AudioEncoder.pcm16bits,
         sampleRate: 16000,
         numChannels: 1,
-        androidConfig:
-            AndroidRecordConfig(audioSource: AndroidAudioSource.voiceRecognition),
+        // demo 实测：这台 MIUI 上 VOICE_RECOGNITION 音源静音，MIC 正常
+        androidConfig: AndroidRecordConfig(audioSource: AndroidAudioSource.mic),
       ));
       VLog.say('record stream started');
       _sub = stream.listen((chunk) {
