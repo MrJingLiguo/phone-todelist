@@ -21,8 +21,8 @@ dependencies:
   permission_handler: ^11.3.1
   # 5.x 的依赖约束太松（platform_interface 独立漂移到不兼容版本），用全家桶配套的 7.x
   record: ^7.1.2
-  # 1.12+ 改了 API（modelConfig→model），钉在经典 API 版本
-  sherpa_onnx: 1.10.46
+  # 官方 demo（红米实测可跑通）用的 1.13.8 运行时；1.10.46 在该机型上推理静默失败
+  sherpa_onnx: 1.13.8
 
 dev_dependencies:
   flutter_test:

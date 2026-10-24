@@ -29,6 +29,7 @@ class SherpaStt {
 
   /// 首次调用会把模型从 assets 拷到应用目录（native 侧需要真实文件路径）。
   static Future<SherpaStt> create() async {
+    sherpa.initBindings(); // 1.13+ 必须先加载 native 绑定
     final dir = await getApplicationDocumentsDirectory();
     VLog.say('model dir: ${dir.path}');
     for (final f in _files) {
