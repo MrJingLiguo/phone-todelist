@@ -24,6 +24,10 @@ class AppState extends ChangeNotifier {
   bool modelLoading = false;
   String partial = '';
 
+  /// 本次录音已收到的 PCM 字节数（诊断用，UI 显示收音秒数）。
+  int fedBytes = 0;
+  int _lastNotifyFed = 0;
+
   /// 查询意图设置的日期过滤；null 显示全部。
   DateTime? filterDay;
 
@@ -81,6 +85,7 @@ class AppState extends ChangeNotifier {
     }
 
     final status = await Permission.microphone.request();
+    print('[voice_todo] mic permission -> $status');
     if (status != PermissionStatus.granted) {
       listening = false;
       _msg('未获得麦克风权限', ok: false);
@@ -89,27 +94,36 @@ class AppState extends ChangeNotifier {
 
     try {
       _stt!.newStream();
+      fedBytes = 0;
+      _lastNotifyFed = 0;
       final recorder = AudioRecorder();
       _recorder = recorder;
       final stream = await recorder.startStream(const RecordConfig(
         encoder: AudioEncoder.pcm16bits,
         sampleRate: 16000,
         numChannels: 1,
+        androidConfig: AndroidRecordConfig(audioSource: AndroidAudioSource.mic),
       ));
+      print('[voice_todo] record stream started');
       _sub = stream.listen((chunk) {
         if (!listening) return;
+        fedBytes += chunk.lengthInBytes;
         _stt!.feed(chunk);
         final t = _stt!.decode();
-        if (t != partial) {
-          partial = t;
+        final changed = t != partial;
+        if (changed) partial = t;
+        if (changed || fedBytes - _lastNotifyFed >= 8000) {
+          _lastNotifyFed = fedBytes;
           notifyListeners();
         }
       }, onError: (Object e) {
+        print('[voice_todo] stream error: $e');
         _stopInternal();
         _msg('录音出错：$e', ok: false);
       });
     } catch (e) {
       listening = false;
+      print('[voice_todo] start error: $e');
       _msg('无法开始录音：$e', ok: false);
       return;
     }
@@ -123,6 +137,7 @@ class AppState extends ChangeNotifier {
     final text = partial.trim();
     partial = '';
     notifyListeners();
+    print('[voice_todo] stop, fed=${(fedBytes / 32000).toStringAsFixed(1)}s, final="$text"');
     if (text.isEmpty) {
       _msg('没听清，请再试一次', ok: false);
       return null;

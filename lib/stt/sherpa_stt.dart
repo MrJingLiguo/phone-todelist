@@ -13,6 +13,8 @@ class SherpaStt {
   final sherpa.OnlineRecognizer _recognizer;
   sherpa.OnlineStream? _stream;
   String _committed = '';
+  int _fedSamples = 0;
+  String _lastLogged = '';
 
   static const _files = [
     'encoder-epoch-99-avg-1.int8.onnx',
@@ -24,6 +26,7 @@ class SherpaStt {
   /// 首次调用会把模型从 assets 拷到应用目录（native 侧需要真实文件路径）。
   static Future<SherpaStt> create() async {
     final dir = await getApplicationDocumentsDirectory();
+    print('[voice_todo] model dir: ${dir.path}');
     for (final f in _files) {
       final out = File(p.join(dir.path, f));
       if (!out.existsSync()) {
@@ -31,6 +34,7 @@ class SherpaStt {
         await out.writeAsBytes(
             data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
       }
+      print('[voice_todo] model $f = ${out.lengthSync()} bytes');
     }
     final config = sherpa.OnlineRecognizerConfig(
       model: sherpa.OnlineModelConfig(
@@ -43,7 +47,9 @@ class SherpaStt {
         numThreads: 2,
       ),
     );
-    return SherpaStt._(sherpa.OnlineRecognizer(config));
+    final rec = sherpa.OnlineRecognizer(config);
+    print('[voice_todo] recognizer ready');
+    return SherpaStt._(rec);
   }
 
   void newStream() {
@@ -63,6 +69,10 @@ class SherpaStt {
     for (var i = 0; i < n; i++) {
       f32[i] = data.getInt16(i * 2, Endian.little) / 32768.0;
     }
+    _fedSamples += n;
+    if (_fedSamples ~/ 16000 != (_fedSamples - n) ~/ 16000) {
+      print('[voice_todo] fed ${(_fedSamples / 16000).toStringAsFixed(1)}s');
+    }
     st.acceptWaveform(samples: f32, sampleRate: 16000);
   }
 
@@ -74,8 +84,13 @@ class SherpaStt {
       _recognizer.decode(st);
     }
     var text = _recognizer.getResult(st).text;
+    if (text.isNotEmpty && text != _lastLogged) {
+      _lastLogged = text;
+      print('[voice_todo] asr: $text');
+    }
     if (_recognizer.isEndpoint(st)) {
       _committed += text;
+      print('[voice_todo] endpoint, committed="$_committed"');
       text = '';
       _recognizer.reset(st);
     }

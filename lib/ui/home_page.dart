@@ -46,7 +46,11 @@ class _HomePageState extends State<HomePage> {
       body: Column(
         children: [
           if (state.listening)
-            _ListeningBar(partial: state.partial, modelLoading: state.modelLoading),
+            _ListeningBar(
+              partial: state.partial,
+              modelLoading: state.modelLoading,
+              fedSeconds: state.fedBytes / 32000,
+            ),
           Expanded(
             child: state.loading
                 ? const Center(child: CircularProgressIndicator())
@@ -257,12 +261,24 @@ class _Section {
 class _ListeningBar extends StatelessWidget {
   final String partial;
   final bool modelLoading;
+  final double fedSeconds;
 
-  const _ListeningBar({required this.partial, required this.modelLoading});
+  const _ListeningBar({
+    required this.partial,
+    required this.modelLoading,
+    required this.fedSeconds,
+  });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final status = modelLoading
+        ? '正在加载识别模型，首次约需几秒…'
+        : partial.isEmpty
+            ? (fedSeconds < 0.5
+                ? '正在听，请说出指令…'
+                : '正在听… 已收音 ${fedSeconds.toStringAsFixed(1)} 秒')
+            : partial;
     return Container(
       width: double.infinity,
       color: scheme.primaryContainer,
@@ -273,9 +289,7 @@ class _ListeningBar extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              modelLoading
-                  ? '正在加载识别模型，首次约需几秒…'
-                  : (partial.isEmpty ? '正在听，请说出指令…' : partial),
+              status,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(color: scheme.onPrimaryContainer),
