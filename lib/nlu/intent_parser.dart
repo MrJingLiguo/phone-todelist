@@ -26,6 +26,9 @@ class IntentParser {
   static final _suffixFiller = RegExp(
       r'\s*(?:的?(?:任务|事项|待办|日程|提醒|闹钟|闹铃))*(?:吧|啊|哦|呀|哈|呗|啦|了)*[。，,.!！?？]*$');
 
+  /// 整句只有语气词/标点 → 视为噪声，不生成任务。
+  static final _noise = RegExp(r'^[嗯啊哦呃哎哈呀嘛呢噢喔了的吧。，,.!！?？\s]+$');
+
   static ParsedIntent parse(String raw, {DateTime? now}) {
     final text = raw.trim();
     final tp = TimeParser.parse(text, now: now);
@@ -115,8 +118,8 @@ class IntentParser {
           raw: text);
     }
 
-    // 7) 兜底：普通待办
-    if (title.isNotEmpty) {
+    // 7) 兜底：普通待办（纯噪声除外）
+    if (title.isNotEmpty && !_noise.hasMatch(title)) {
       return ParsedIntent(
           type: IntentType.addTask,
           title: title,
