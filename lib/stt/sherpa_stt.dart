@@ -6,6 +6,8 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa;
 
+import '../platform/vlog.dart';
+
 /// sherpa-onnx 离线流式识别（zipformer 中英双语 int8 模型，构建时打进 APK）。
 class SherpaStt {
   SherpaStt._(this._recognizer);
@@ -26,7 +28,7 @@ class SherpaStt {
   /// 首次调用会把模型从 assets 拷到应用目录（native 侧需要真实文件路径）。
   static Future<SherpaStt> create() async {
     final dir = await getApplicationDocumentsDirectory();
-    print('[voice_todo] model dir: ${dir.path}');
+    VLog.say('model dir: ${dir.path}');
     for (final f in _files) {
       final out = File(p.join(dir.path, f));
       if (!out.existsSync()) {
@@ -34,7 +36,7 @@ class SherpaStt {
         await out.writeAsBytes(
             data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
       }
-      print('[voice_todo] model $f = ${out.lengthSync()} bytes');
+      VLog.say('model $f = ${out.lengthSync()} bytes');
     }
     final config = sherpa.OnlineRecognizerConfig(
       model: sherpa.OnlineModelConfig(
@@ -48,12 +50,13 @@ class SherpaStt {
       ),
     );
     final rec = sherpa.OnlineRecognizer(config);
-    print('[voice_todo] recognizer ready');
+    VLog.say('recognizer ready');
     return SherpaStt._(rec);
   }
 
   void newStream() {
     _committed = '';
+    _lastLogged = '';
     _stream = _recognizer.createStream();
   }
 
@@ -71,7 +74,7 @@ class SherpaStt {
     }
     _fedSamples += n;
     if (_fedSamples ~/ 16000 != (_fedSamples - n) ~/ 16000) {
-      print('[voice_todo] fed ${(_fedSamples / 16000).toStringAsFixed(1)}s');
+      VLog.say('fed ${(_fedSamples / 16000).toStringAsFixed(1)}s');
     }
     st.acceptWaveform(samples: f32, sampleRate: 16000);
   }
@@ -86,11 +89,11 @@ class SherpaStt {
     var text = _recognizer.getResult(st).text;
     if (text.isNotEmpty && text != _lastLogged) {
       _lastLogged = text;
-      print('[voice_todo] asr: $text');
+      VLog.say('asr: $text');
     }
     if (_recognizer.isEndpoint(st)) {
       _committed += text;
-      print('[voice_todo] endpoint, committed="$_committed"');
+      VLog.say('endpoint, committed="$_committed"');
       text = '';
       _recognizer.reset(st);
     }

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
+
+import '../state/app_state.dart';
 
 /// 设置页：权限状态 + 语音指令帮助。
 class SettingsPage extends StatelessWidget {
@@ -13,6 +16,38 @@ class SettingsPage extends StatelessWidget {
         children: [
           const Padding(
             padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
+            child: Text('提醒状态', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          FutureBuilder<int>(
+            future: context.read<AppState>().executor.reminders.pendingCount(),
+            builder: (context, snap) {
+              final n = snap.data ?? -1;
+              return ListTile(
+                leading: Icon(
+                  n > 0 ? Icons.notifications_active : Icons.notifications_off_outlined,
+                  color: n > 0 ? Colors.green : Colors.orange,
+                ),
+                title: const Text('已排定的提醒'),
+                subtitle: Text(n < 0 ? '查询失败' : '$n 条'),
+              );
+            },
+          ),
+          const ListTile(
+            leading: Icon(Icons.bug_report_outlined),
+            title: Text('小米/红米（MIUI）必读'),
+            subtitle: Text(
+              '到点不提醒时依次检查：\n'
+              '1. 系统设置 → 应用管理 → 语音待办 → 允许「自启动」\n'
+              '2. 省电策略改为「无限制」\n'
+              '3. 通知权限保持开启\n'
+              '4. 最近任务里不要划掉本应用（可先锁定）',
+              style: TextStyle(height: 1.4),
+            ),
+            isThreeLine: true,
+          ),
+          const Divider(),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 4),
             child: Text('权限', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
           FutureBuilder<PermissionStatus>(

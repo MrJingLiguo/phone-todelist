@@ -47,6 +47,15 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "voice_todo/log")
+            .setMethodCallHandler { call, result ->
+                if (call.method == "log") {
+                    android.util.Log.i("voice_todo", call.arguments as? String ?: "")
+                    result.success(null)
+                } else {
+                    result.notImplemented()
+                }
+            }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "voice_todo/alarm")
             .setMethodCallHandler { call, result ->
                 if (call.method == "setAlarm") {

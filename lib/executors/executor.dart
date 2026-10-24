@@ -8,6 +8,7 @@ import '../data/task_db.dart';
 import '../models/task.dart';
 import '../nlu/intent.dart';
 import '../platform/alarm_channel.dart';
+import '../platform/vlog.dart';
 
 /// 时区初始化（v1：东八区按 Asia/Shanghai，其他偏移退化为 UTC）。
 class AppTz {
@@ -86,6 +87,26 @@ class ReminderService {
     try {
       await _plugin.cancel(id);
     } catch (_) {}
+  }
+
+  /// 系统通知权限是否开启（MIUI 等国产 ROM 需手动确认）。
+  Future<bool> notificationsEnabled() async {
+    try {
+      final android = _plugin
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      return await android?.areNotificationsEnabled() ?? true;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  /// 已排定的提醒数量（-1 表示查询失败）。
+  Future<int> pendingCount() async {
+    try {
+      return await _plugin.pendingNotificationRequestCount() ?? 0;
+    } catch (_) {
+      return -1;
+    }
   }
 }
 
@@ -179,9 +200,12 @@ class Executor {
           warn = '提醒时间已过，未设置提醒';
         } else {
           await reminders.schedule(id, title, time, repeat);
+          if (!await reminders.notificationsEnabled()) {
+            warn = '已排提醒，但系统通知权限未开启，到点不会显示';
+          }
         }
       } catch (e) {
-        print('[voice_todo] schedule failed: $e');
+        VLog.say('schedule failed: $e');
         warn = '提醒设置失败：$e';
       }
     }

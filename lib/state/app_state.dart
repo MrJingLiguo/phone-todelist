@@ -9,6 +9,7 @@ import '../executors/executor.dart';
 import '../models/task.dart';
 import '../nlu/intent.dart';
 import '../nlu/intent_parser.dart';
+import '../platform/vlog.dart';
 import '../stt/sherpa_stt.dart';
 
 /// 全局状态：任务列表 + 语音录入 + 执行反馈。
@@ -85,7 +86,7 @@ class AppState extends ChangeNotifier {
     }
 
     final status = await Permission.microphone.request();
-    print('[voice_todo] mic permission -> $status');
+    VLog.say('mic permission -> $status');
     if (status != PermissionStatus.granted) {
       listening = false;
       _msg('未获得麦克风权限', ok: false);
@@ -104,7 +105,7 @@ class AppState extends ChangeNotifier {
         numChannels: 1,
         androidConfig: AndroidRecordConfig(audioSource: AndroidAudioSource.mic),
       ));
-      print('[voice_todo] record stream started');
+      VLog.say('record stream started');
       _sub = stream.listen((chunk) {
         if (!listening) return;
         fedBytes += chunk.lengthInBytes;
@@ -117,13 +118,13 @@ class AppState extends ChangeNotifier {
           notifyListeners();
         }
       }, onError: (Object e) {
-        print('[voice_todo] stream error: $e');
+        VLog.say('stream error: $e');
         _stopInternal();
         _msg('录音出错：$e', ok: false);
       });
     } catch (e) {
       listening = false;
-      print('[voice_todo] start error: $e');
+      VLog.say('start error: $e');
       _msg('无法开始录音：$e', ok: false);
       return;
     }
@@ -137,7 +138,7 @@ class AppState extends ChangeNotifier {
     final text = partial.trim();
     partial = '';
     notifyListeners();
-    print('[voice_todo] stop, fed=${(fedBytes / 32000).toStringAsFixed(1)}s, final="$text"');
+    VLog.say('stop, fed=${(fedBytes / 32000).toStringAsFixed(1)}s, final="$text"');
     if (text.isEmpty) {
       _msg('没听清，请再试一次', ok: false);
       return null;
@@ -184,7 +185,7 @@ class AppState extends ChangeNotifier {
         endOverride: end,
       );
     } catch (e) {
-      print('[voice_todo] execute error: $e');
+      VLog.say('execute error: $e');
       r = ExecResult(false, '执行出错：$e');
     }
     await refresh();
@@ -214,7 +215,7 @@ class AppState extends ChangeNotifier {
     try {
       r = await executor.run(i);
     } catch (e) {
-      print('[voice_todo] addManual error: $e');
+      VLog.say('addManual error: $e');
       r = ExecResult(false, '执行出错：$e');
     }
     await refresh();
