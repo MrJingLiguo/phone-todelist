@@ -134,7 +134,52 @@ def write_main_activity():
     print("MainActivity.kt written")
 
 
+DESUGAR_LIB = "com.android.tools:desugar_jdk_libs:2.1.4"
+
+
+def patch_desugaring():
+    """flutter_local_notifications 要求开启 core library desugaring。"""
+    for name, kts in [("build.gradle.kts", True), ("build.gradle", False)]:
+        p = os.path.join(ANDROID, "app", name)
+        if not os.path.exists(p):
+            continue
+        text = read(p)
+        changed = False
+        if "CoreLibraryDesugaringEnabled = true" not in text and "coreLibraryDesugaringEnabled true" not in text:
+            if kts:
+                new = re.sub(
+                    r"(compileOptions\s*\{)",
+                    r"\1\n        isCoreLibraryDesugaringEnabled = true",
+                    text,
+                    count=1,
+                )
+            else:
+                new = re.sub(
+                    r"(compileOptions\s*\{)",
+                    r"\1\n        coreLibraryDesugaringEnabled true",
+                    text,
+                    count=1,
+                )
+            if new != text:
+                text, changed = new, True
+        if "coreLibraryDesugaring(" not in text and "coreLibraryDesugaring " not in text:
+            if kts:
+                block = '\n\ndependencies {\n    coreLibraryDesugaring("%s")\n}\n' % DESUGAR_LIB
+            else:
+                block = "\n\ndependencies {\n    coreLibraryDesugaring '%s'\n}\n" % DESUGAR_LIB
+            text = text.rstrip() + block
+            changed = True
+        if changed:
+            write(p, text)
+            print("%s: desugaring enabled" % name)
+        else:
+            print("%s: desugaring already patched" % name)
+        return
+    print("WARN: no gradle file found for desugaring patch")
+
+
 if __name__ == "__main__":
     patch_manifest(os.path.join(APP_MAIN, "AndroidManifest.xml"))
     patch_min_sdk()
     write_main_activity()
+    patch_desugaring()
