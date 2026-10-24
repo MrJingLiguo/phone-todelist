@@ -65,7 +65,7 @@ class TimeParser {
     }
     m = RegExp(r'每\s*[个]?\s*(?:星期|礼拜|周)\s*([一二三四五六日天])').firstMatch(work);
     if (m != null && repeat == null) {
-      repeat = 'weekly:${_weekdayOf(m.group(2)!)}';
+      repeat = 'weekly:${_weekdayOf(m.group(1)!)}';
       work = _nullify(work, m);
     }
     if (repeat == null) {
