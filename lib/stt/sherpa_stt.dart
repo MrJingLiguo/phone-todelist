@@ -20,9 +20,9 @@ class SherpaStt {
   String _lastLogged = '';
 
   static const _files = [
-    'encoder-epoch-99-avg-1.int8.onnx',
-    'decoder-epoch-99-avg-1.int8.onnx',
-    'joiner-epoch-99-avg-1.int8.onnx',
+    'encoder.int8.onnx',
+    'decoder.onnx',
+    'joiner.onnx',
     'tokens.txt',
   ];
 
