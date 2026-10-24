@@ -33,7 +33,7 @@ class SherpaStt {
       }
     }
     final config = sherpa.OnlineRecognizerConfig(
-      modelConfig: sherpa.OnlineModelConfig(
+      model: sherpa.OnlineModelConfig(
         transducer: sherpa.OnlineTransducerModelConfig(
           encoder: p.join(dir.path, _files[0]),
           decoder: p.join(dir.path, _files[1]),
