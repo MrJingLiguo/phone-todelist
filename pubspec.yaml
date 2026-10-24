@@ -1,0 +1,33 @@
+name: voice_todo
+description: 语音控制的待办应用 —— 说话即可建任务、设提醒、写日历、定闹钟。
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.4.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  provider: ^6.1.2
+  sqflite: ^2.3.3
+  path: ^1.9.0
+  path_provider: ^2.1.4
+  flutter_local_notifications: ^17.2.2
+  timezone: ^0.9.4
+  device_calendar: ^4.3.0
+  permission_handler: ^11.3.1
+  record: ^5.1.2
+  sherpa_onnx: ^1.10.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/models/

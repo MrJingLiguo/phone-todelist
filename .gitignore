@@ -1,0 +1,27 @@
+# Flutter/Dart（android/ 由 CI 的 flutter create 生成，不入库）
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+android/
+ios/
+.metadata
+pubspec.lock
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# 模型文件（CI 构建时下载）
+assets/models/*
+!assets/models/.gitkeep
+
+# 系统
+*.log
+.DS_Store
