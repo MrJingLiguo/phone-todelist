@@ -172,12 +172,23 @@ class Executor {
       repeat: repeat,
       createdAt: DateTime.now(),
     ));
+    var warn = '';
     if (time != null) {
-      await reminders.schedule(id, title, time, repeat);
+      try {
+        if (!time.isAfter(DateTime.now())) {
+          warn = '提醒时间已过，未设置提醒';
+        } else {
+          await reminders.schedule(id, title, time, repeat);
+        }
+      } catch (e) {
+        print('[voice_todo] schedule failed: $e');
+        warn = '提醒设置失败：$e';
+      }
     }
     var msg = '已添加「$title」';
-    if (time != null) msg += '，${fmtTime(time)}提醒';
+    if (time != null && warn.isEmpty) msg += '，${fmtTime(time)}提醒';
     if (repeat != null) msg += '（${repeatLabel(repeat)}）';
+    if (warn.isNotEmpty) msg += '。$warn';
     if (extra != null) msg += '。$extra';
     return ExecResult(true, msg);
   }

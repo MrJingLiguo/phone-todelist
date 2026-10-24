@@ -10,3 +10,5 @@ linter:
     prefer_const_constructors: false
     prefer_const_declarations: false
     prefer_const_literals_to_create_immutables: false
+    # 诊断日志用 print（release 下 logcat 可见）
+    avoid_print: false

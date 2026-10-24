@@ -175,12 +175,18 @@ class AppState extends ChangeNotifier {
       return;
     }
     filterDay = null;
-    final r = await executor.run(
-      i,
-      titleOverride: title,
-      timeOverride: time,
-      endOverride: end,
-    );
+    ExecResult r;
+    try {
+      r = await executor.run(
+        i,
+        titleOverride: title,
+        timeOverride: time,
+        endOverride: end,
+      );
+    } catch (e) {
+      print('[voice_todo] execute error: $e');
+      r = ExecResult(false, '执行出错：$e');
+    }
     await refresh();
     _msg(r.message, ok: r.ok);
   }
@@ -204,7 +210,13 @@ class AppState extends ChangeNotifier {
 
   Future<void> addManual(String title, DateTime? time) async {
     final i = ParsedIntent(type: IntentType.addTask, title: title, time: time, raw: title);
-    final r = await executor.run(i);
+    ExecResult r;
+    try {
+      r = await executor.run(i);
+    } catch (e) {
+      print('[voice_todo] addManual error: $e');
+      r = ExecResult(false, '执行出错：$e');
+    }
     await refresh();
     _msg(r.message, ok: r.ok);
   }
