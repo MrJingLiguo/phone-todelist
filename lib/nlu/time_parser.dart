@@ -131,7 +131,7 @@ class TimeParser {
     }
 
     // —— X年X月X日 / X月X号 / X号 ——
-    m = RegExp('([0-9]{4})\\s*年\\s*($num)\\s*月\\s*($num)\\s*[日号]').firstMatch(work);
+    m = RegExp('([0-9]{4})\\s*年\\s*($_num)\\s*月\\s*($_num)\\s*[日号]').firstMatch(work);
     if (m != null) {
       final y = int.tryParse(m.group(1)!) ?? n.year;
       final mo = _cn(m.group(2)!);
@@ -143,7 +143,7 @@ class TimeParser {
       }
     }
     if (!dateExplicit) {
-      m = RegExp('($num)\\s*月\\s*($num)\\s*[日号]').firstMatch(work);
+      m = RegExp('($_num)\\s*月\\s*($_num)\\s*[日号]').firstMatch(work);
       if (m != null) {
         final mo = _cn(m.group(1)!);
         final d = _cn(m.group(2)!);
@@ -158,7 +158,7 @@ class TimeParser {
       }
     }
     if (!dateExplicit) {
-      m = RegExp('($num)\\s*[日号]').firstMatch(work);
+      m = RegExp('($_num)\\s*[日号]').firstMatch(work);
       if (m != null) {
         final d = _cn(m.group(1)!);
         if (d != null && d >= 1 && d <= 31) {
@@ -174,7 +174,7 @@ class TimeParser {
 
     // —— 带时段前缀的时刻 ——
     const qual = '(凌晨|清晨|早上|上午|中午|午后|下午|傍晚|晚上|夜里)';
-    m = RegExp('$qual\\s*(?:($num)\\s*[点时:：]\\s*)?(半|($num)\\s*分?)?').firstMatch(work);
+    m = RegExp('$qual\\s*(?:($_num)\\s*[点时:：]\\s*)?(半|($_num)\\s*分?)?').firstMatch(work);
     if (m != null) {
       hour = _qualifiedHour(m.group(1)!, m.group(2));
       minute = _minuteOf(m.group(3) ?? '');
@@ -217,7 +217,7 @@ class TimeParser {
 
     // —— 裸时刻 X点(半) ——
     if (!hasTime) {
-      m = RegExp('($num)\\s*[点时]\\s*(半|($num)\\s*分?)?').firstMatch(work);
+      m = RegExp('($_num)\\s*[点时]\\s*(半|($_num)\\s*分?)?').firstMatch(work);
       if (m != null) {
         final raw = _cn(m.group(1)!);
         if (raw != null && raw >= 0 && raw <= 24) {
