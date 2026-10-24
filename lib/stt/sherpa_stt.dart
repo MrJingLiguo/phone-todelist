@@ -17,6 +17,7 @@ class SherpaStt {
   String _committed = '';
   int _fedSamples = 0;
   double _windowPeak = 0;
+  double _totalPeak = 0;
   String _lastLogged = '';
 
   static const _files = [
@@ -60,6 +61,7 @@ class SherpaStt {
     _lastLogged = '';
     _fedSamples = 0;
     _windowPeak = 0;
+    _totalPeak = 0;
     _stream = _recognizer.createStream();
   }
 
@@ -75,16 +77,17 @@ class SherpaStt {
     for (var i = 0; i < n; i++) {
       f32[i] = data.getInt16(i * 2, Endian.little) / 32768.0;
     }
-    _fedSamples += n;
     final prevSec = _fedSamples ~/ 16000;
+    _fedSamples += n;
     // 每秒输出一次音量峰值：区分「静音输入」和「有声音但识别不出」
     for (var i = 0; i < n; i++) {
       final a = f32[i].abs();
       if (a > _windowPeak) _windowPeak = a;
+      if (a > _totalPeak) _totalPeak = a;
     }
     if (_fedSamples ~/ 16000 != prevSec) {
       VLog.say('fed ${(_fedSamples / 16000).toStringAsFixed(1)}s, '
-          'peak=${_windowPeak.toStringAsFixed(3)}');
+          'peak=${_windowPeak.toStringAsFixed(3)}, totalPeak=${_totalPeak.toStringAsFixed(3)}');
       _windowPeak = 0;
     }
     st.acceptWaveform(samples: f32, sampleRate: 16000);
