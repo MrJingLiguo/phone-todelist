@@ -103,7 +103,8 @@ class AppState extends ChangeNotifier {
         encoder: AudioEncoder.pcm16bits,
         sampleRate: 16000,
         numChannels: 1,
-        androidConfig: AndroidRecordConfig(audioSource: AndroidAudioSource.mic),
+        androidConfig:
+            AndroidRecordConfig(audioSource: AndroidAudioSource.voiceRecognition),
       ));
       VLog.say('record stream started');
       _sub = stream.listen((chunk) {
