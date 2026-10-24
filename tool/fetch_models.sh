@@ -6,7 +6,7 @@ MODEL="sherpa-onnx-streaming-zipformer-small-bilingual-zh-en-2023-02-16"
 URL="https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/${MODEL}.tar.bz2"
 
 dest="$(pwd)/assets/models"
-if [ -f "$dest/tokens.txt" ] && [ -n "$(find "$dest" -name '*encoder*int8*.onnx' -print -quit 2>/dev/null)" ]; then
+if [ -f "$dest/tokens.txt" ] && [ -n "$(find "$dest" -name 'encoder*.int8.onnx' -print -quit 2>/dev/null)" ]; then
   echo "model already present, skip"
   exit 0
 fi
@@ -29,9 +29,11 @@ fi
 
 mkdir -p "$dest"
 for stem in encoder decoder joiner; do
-  f="$src/${stem}-epoch-99-avg-1-int8.onnx"
-  [ -f "$f" ] || { echo "ERROR: $f not found" >&2; ls "$src" >&2; exit 1; }
-  cp "$f" "$dest/"
+  # 该模型 int8 文件命名为 *.int8.onnx（点分，非 -int8.onnx）
+  f="$src/${stem}-epoch-99-avg-1.int8.onnx"
+  [ -f "$f" ] || f="$src/${stem}-epoch-99-avg-1-int8.onnx"
+  [ -f "$f" ] || { echo "ERROR: ${stem} int8 onnx not found" >&2; ls "$src" >&2; exit 1; }
+  cp "$f" "$dest/${stem}-epoch-99-avg-1.int8.onnx"
 done
 cp "$src/tokens.txt" "$dest/"
 

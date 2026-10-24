@@ -15,9 +15,9 @@ class SherpaStt {
   String _committed = '';
 
   static const _files = [
-    'encoder-epoch-99-avg-1-int8.onnx',
-    'decoder-epoch-99-avg-1-int8.onnx',
-    'joiner-epoch-99-avg-1-int8.onnx',
+    'encoder-epoch-99-avg-1.int8.onnx',
+    'decoder-epoch-99-avg-1.int8.onnx',
+    'joiner-epoch-99-avg-1.int8.onnx',
     'tokens.txt',
   ];
 
