@@ -15,6 +15,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # 首次运行生成固定签名 keystore 并提交入库（[skip ci] 防循环），
+      # 之后所有构建用同一签名，APK 可覆盖升级安装
+      - name: Ensure signing keystore
+        run: |
+          if [ ! -f android_signing/voice_todo.keystore ]; then
+            mkdir -p android_signing
+            keytool -genkeypair -v -keystore android_signing/voice_todo.keystore \
+              -alias voice_todo -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass voice_todo_2026 -keypass voice_todo_2026 \
+              -dname "CN=voice_todo, OU=personal, O=jing, C=CN"
+            git config user.name "ci-bot"
+            git config user.email "ci-bot@users.noreply.github.com"
+            git add android_signing/voice_todo.keystore
+            git commit -m "chore: add signing keystore [skip ci]"
+            git push
+          fi
+
       - uses: subosito/flutter-action@v2
         with:
           channel: stable

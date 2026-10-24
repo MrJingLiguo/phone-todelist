@@ -137,6 +137,63 @@ def write_main_activity():
 DESUGAR_LIB = "com.android.tools:desugar_jdk_libs:2.1.4"
 
 
+KEYSTORE_PASS = "voice_todo_2026"
+KEY_ALIAS = "voice_todo"
+
+
+def patch_signing():
+    """给 release 构建配置固定签名（keystore 由 CI 首次生成并提交到 android_signing/）。"""
+    for name, kts in [("build.gradle.kts", True), ("build.gradle", False)]:
+        p = os.path.join(ANDROID, "app", name)
+        if not os.path.exists(p):
+            continue
+        text = read(p)
+        if "voice_todo.keystore" in text:
+            print("%s: signing already patched" % name)
+            return
+        if kts:
+            block = (
+                "signingConfigs {\n"
+                '    create("%s") {\n'
+                '        storeFile = file("../../android_signing/voice_todo.keystore")\n'
+                '        storePassword = "%s"\n'
+                '        keyAlias = "%s"\n'
+                '        keyPassword = "%s"\n'
+                "    }\n"
+                "}\n"
+                "buildTypes {"
+            ) % (KEY_ALIAS, KEYSTORE_PASS, KEY_ALIAS, KEYSTORE_PASS)
+            new = re.sub(r"buildTypes\s*\{", block, text, count=1)
+            new = new.replace(
+                'signingConfig = signingConfigs.getByName("debug")',
+                'signingConfig = signingConfigs.getByName("%s")' % KEY_ALIAS,
+            )
+        else:
+            block = (
+                "signingConfigs {\n"
+                "    %s {\n"
+                "        storeFile file('../../android_signing/voice_todo.keystore')\n"
+                "        storePassword '%s'\n"
+                "        keyAlias '%s'\n"
+                "        keyPassword '%s'\n"
+                "    }\n"
+                "}\n"
+                "buildTypes {"
+            ) % (KEY_ALIAS, KEYSTORE_PASS, KEY_ALIAS, KEYSTORE_PASS)
+            new = re.sub(r"buildTypes\s*\{", block, text, count=1)
+            new = new.replace(
+                "signingConfig signingConfigs.debug",
+                "signingConfig signingConfigs.%s" % KEY_ALIAS,
+            )
+        if new != text:
+            write(p, new)
+            print("%s: signing patched" % name)
+        else:
+            print("%s: WARN no signing anchor found" % name)
+        return
+    print("WARN: no gradle file for signing patch")
+
+
 def patch_desugaring():
     """flutter_local_notifications 要求开启 core library desugaring。"""
     for name, kts in [("build.gradle.kts", True), ("build.gradle", False)]:
@@ -183,3 +240,4 @@ if __name__ == "__main__":
     patch_min_sdk()
     write_main_activity()
     patch_desugaring()
+    patch_signing()
