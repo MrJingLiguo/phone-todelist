@@ -25,3 +25,4 @@ assets/models/*
 # 系统
 *.log
 .DS_Store
+dist/
