@@ -103,7 +103,9 @@ class ReminderService {
   /// 已排定的提醒数量（-1 表示查询失败）。
   Future<int> pendingCount() async {
     try {
-      return await _plugin.pendingNotificationRequestCount() ?? 0;
+      final android = _plugin
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      return await android?.pendingNotificationRequestCount() ?? 0;
     } catch (_) {
       return -1;
     }
