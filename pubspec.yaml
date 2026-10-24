@@ -19,7 +19,8 @@ dependencies:
   timezone: ^0.9.4
   device_calendar: ^4.3.0
   permission_handler: ^11.3.1
-  record: ^5.1.2
+  # 5.2.x 会搭配出不兼容的 record_linux，钉死（API 不变）
+  record: 5.1.2
   # 1.12+ 改了 API（modelConfig→model），钉在经典 API 版本
   sherpa_onnx: 1.10.46
 
