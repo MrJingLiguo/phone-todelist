@@ -253,12 +253,13 @@ def patch_minify():
             changed = True
         if "proguard-rules.pro" not in text:
             if kts:
+                # 注意：不能用 raw 字符串，否则 \" 会原样写进 gradle 导致语法错误
                 text = re.sub(r"(release\s*\{)",
-                              r"\1\n        proguardFiles(getDefaultProguardFile(\"proguard-android-optimize.txt\"), \"proguard-rules.pro\")",
+                              "\\1\\n        proguardFiles(getDefaultProguardFile(\"proguard-android-optimize.txt\"), \"proguard-rules.pro\")",
                               text, count=1)
             else:
                 text = re.sub(r"(release\s*\{)",
-                              r"\1\n        proguardFiles getDefaultProguardFile(\"proguard-android-optimize.txt\"), \"proguard-rules.pro\"",
+                              "\\1\\n        proguardFiles getDefaultProguardFile(\"proguard-android-optimize.txt\"), \"proguard-rules.pro\"",
                               text, count=1)
             changed = True
         if changed:
