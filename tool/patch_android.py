@@ -204,36 +204,36 @@ def patch_signing():
 
 
 def patch_minify():
-    """关闭 release 混淆：R8 会剥掉插件 Gson 泛型，导致排定提醒报 Missing type parameter。"""
-    for name, kts in [("build.gradle.kts", True), ("build.gradle", False)]:
-        p = os.path.join(ANDROID, "app", name)
+    """关闭 release 混淆：R8 会剥掉插件 Gson 泛型，导致排定提醒报 Missing type parameter。
+
+    新版模板可能把 isShrinkResources/isMinifyEnabled 放在根 build.gradle.kts，
+    因此根和 app 两级 gradle 都做全局替换。
+    """
+    targets = [
+        (os.path.join(ANDROID, "build.gradle.kts"), True),
+        (os.path.join(ANDROID, "build.gradle"), False),
+        (os.path.join(ANDROID, "app", "build.gradle.kts"), True),
+        (os.path.join(ANDROID, "app", "build.gradle"), False),
+    ]
+    patched = False
+    for p, kts in targets:
         if not os.path.exists(p):
             continue
         text = read(p)
         if kts:
-            if re.search(r"isMinifyEnabled\s*=\s*false", text):
-                print("%s: minify already disabled" % name)
-                return
             new = re.sub(r"isMinifyEnabled\s*=\s*true", "isMinifyEnabled = false", text)
-            # 资源收缩依赖 R8，必须一并关闭
             new = re.sub(r"isShrinkResources\s*=\s*true", "isShrinkResources = false", new)
-            if new == text:
-                new = re.sub(r"(release\s*\{)", r"\1\n        isMinifyEnabled = false", text, count=1)
         else:
-            if re.search(r"minifyEnabled\s+false", text):
-                print("%s: minify already disabled" % name)
-                return
             new = re.sub(r"minifyEnabled\s+true", "minifyEnabled false", text)
             new = re.sub(r"shrinkResources\s+true", "shrinkResources false", new)
-            if new == text:
-                new = re.sub(r"(release\s*\{)", r"\1\n        minifyEnabled false", text, count=1)
         if new != text:
             write(p, new)
-            print("%s: minify disabled" % name)
+            print("%s: minify/shrink disabled" % os.path.relpath(p, ROOT))
+            patched = True
         else:
-            print("%s: WARN no release block anchor" % name)
-        return
-    print("WARN: no gradle file for minify patch")
+            print("%s: no minify/shrink lines" % os.path.relpath(p, ROOT))
+    if not patched:
+        print("WARN: no gradle file contained minify/shrink settings")
 
 
 def patch_desugaring():
