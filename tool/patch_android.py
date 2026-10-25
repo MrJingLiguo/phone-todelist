@@ -203,6 +203,36 @@ def patch_signing():
     print("WARN: no gradle file for signing patch")
 
 
+def patch_minify():
+    """关闭 release 混淆：R8 会剥掉插件 Gson 泛型，导致排定提醒报 Missing type parameter。"""
+    for name, kts in [("build.gradle.kts", True), ("build.gradle", False)]:
+        p = os.path.join(ANDROID, "app", name)
+        if not os.path.exists(p):
+            continue
+        text = read(p)
+        if kts:
+            if re.search(r"isMinifyEnabled\s*=\s*false", text):
+                print("%s: minify already disabled" % name)
+                return
+            new = re.sub(r"isMinifyEnabled\s*=\s*true", "isMinifyEnabled = false", text)
+            if new == text:
+                new = re.sub(r"(release\s*\{)", r"\1\n        isMinifyEnabled = false", text, count=1)
+        else:
+            if re.search(r"minifyEnabled\s+false", text):
+                print("%s: minify already disabled" % name)
+                return
+            new = re.sub(r"minifyEnabled\s+true", "minifyEnabled false", text)
+            if new == text:
+                new = re.sub(r"(release\s*\{)", r"\1\n        minifyEnabled false", text, count=1)
+        if new != text:
+            write(p, new)
+            print("%s: minify disabled" % name)
+        else:
+            print("%s: WARN no release block anchor" % name)
+        return
+    print("WARN: no gradle file for minify patch")
+
+
 def patch_desugaring():
     """flutter_local_notifications 要求开启 core library desugaring。"""
     for name, kts in [("build.gradle.kts", True), ("build.gradle", False)]:
@@ -250,3 +280,4 @@ if __name__ == "__main__":
     write_main_activity()
     patch_desugaring()
     patch_signing()
+    patch_minify()
