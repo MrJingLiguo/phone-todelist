@@ -100,6 +100,19 @@ def write(path, text):
         f.write(text)
 
 
+RECEIVERS = (
+    '    <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />\n'
+    '    <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">\n'
+    "        <intent-filter>\n"
+    '            <action android:name="android.intent.action.BOOT_COMPLETED"/>\n'
+    '            <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>\n'
+    '            <action android:name="android.intent.action.QUICKBOOT_POWERON" />\n'
+    '            <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>\n'
+    "        </intent-filter>\n"
+    "    </receiver>\n"
+)
+
+
 def patch_manifest(path):
     text = read(path)
     if 'android:label="语音待办"' not in text:
@@ -113,8 +126,14 @@ def patch_manifest(path):
         text = text.replace("<application", "".join(missing) + "    <application", 1)
     if "<queries>" not in text:
         text = text.replace("<application", QUERIES + "    <application", 1)
+    # v17 插件要求应用自声明接收器，否则到点静默丢弃（README: Setup → receivers）
+    if "ScheduledNotificationReceiver" not in text:
+        text = text.replace("</application>", RECEIVERS + "    </application>", 1)
     write(path, text)
-    print("manifest: %d permissions ensured, queries ensured, label set" % len(PERMISSIONS))
+    print(
+        "manifest: %d permissions ensured, queries ensured, receivers ensured, label set"
+        % len(PERMISSIONS)
+    )
 
 
 def patch_min_sdk():
