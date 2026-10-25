@@ -298,7 +298,19 @@ def patch_minify():
 
 
 def patch_raw_sound():
-    """把仓库里的提示音复制到 res/raw（构建产物目录每次重新生成）。"""
+    """把仓库里的提示音复制到 res/raw（构建产物目录每次重新生成）。
+
+    同时关闭 AGP 资源路径优化：它会改短 res 文件名（res/_k.wav），
+    导致插件按名字 getIdentifier 找不到音源 → 通知静音。
+    """
+    gp = os.path.join(ANDROID, "gradle.properties")
+    if os.path.exists(gp):
+        text = read(gp)
+        if "enableResourceOptimizations" not in text:
+            write(gp, text.rstrip() + "\nandroid.enableResourceOptimizations=false\n")
+            print("gradle.properties: enableResourceOptimizations=false")
+    else:
+        print("WARN: gradle.properties not found")
     d = os.path.join(APP_MAIN, "res", "raw")
     os.makedirs(d, exist_ok=True)
     for name in ["keep_beep.wav", "alarm_60s.wav"]:
