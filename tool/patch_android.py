@@ -299,17 +299,18 @@ def patch_minify():
 
 def patch_raw_sound():
     """把仓库里的提示音复制到 res/raw（构建产物目录每次重新生成）。"""
-    src = os.path.join(ROOT, "assets", "sounds", "keep_beep.wav")
-    if not os.path.exists(src):
-        print("WARN: keep_beep.wav not found in assets/sounds")
-        return
     d = os.path.join(APP_MAIN, "res", "raw")
     os.makedirs(d, exist_ok=True)
-    dst = os.path.join(d, "keep_beep.wav")
-    write_bytes = open(src, "rb").read()
-    with open(dst, "wb") as f:
-        f.write(write_bytes)
-    print("res/raw/keep_beep.wav copied (%d bytes)" % len(write_bytes))
+    for name in ["keep_beep.wav", "alarm_60s.wav"]:
+        src = os.path.join(ROOT, "assets", "sounds", name)
+        if not os.path.exists(src):
+            print("WARN: %s not found in assets/sounds" % name)
+            continue
+        with open(src, "rb") as f:
+            data = f.read()
+        with open(os.path.join(d, name), "wb") as f:
+            f.write(data)
+        print("res/raw/%s copied (%d bytes)" % (name, len(data)))
 
 
 def patch_desugaring():

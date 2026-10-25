@@ -103,25 +103,23 @@ class _HomePageState extends State<HomePage> {
       state.showHint(intent.hint);
       return;
     }
-    // 完成/删除/查询直接执行；创建类弹确认卡片
-    if (intent.type == IntentType.completeTask ||
-        intent.type == IntentType.deleteTask ||
-        intent.type == IntentType.query) {
-      await state.execute(intent);
+    // 完成/删除/查询/待办/闹钟直接执行；写系统日历的日程保留确认卡片（防误建）
+    if (intent.type == IntentType.addEvent) {
+      final result = await showModalBottomSheet<ConfirmResult>(
+        context: context,
+        isScrollControlled: true,
+        builder: (_) => ConfirmSheet(intent: intent),
+      );
+      if (!mounted || result == null) return;
+      await state.execute(
+        result.intent,
+        title: result.title,
+        time: result.time,
+        end: result.end,
+      );
       return;
     }
-    final result = await showModalBottomSheet<ConfirmResult>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => ConfirmSheet(intent: intent),
-    );
-    if (!mounted || result == null) return;
-    await state.execute(
-      result.intent,
-      title: result.title,
-      time: result.time,
-      end: result.end,
-    );
+    await state.execute(intent);
   }
 
   List<_Section> _sections(AppState state) {

@@ -36,21 +36,32 @@ class ReminderService {
   final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
 
   /// 频道设置创建后不可变：换提示音/音量通道时必须换新 id
-  static const _channelId = 'reminders_v2';
+  static const _channelId = 'reminders_v3';
   static const _channel = AndroidNotificationChannel(
     _channelId,
     '待办提醒',
-    description: '语音待办的定时提醒',
+    description: '语音待办的定时提醒（到点响 1 分钟闹钟音）',
     importance: Importance.max,
     playSound: true,
-    sound: RawResourceAndroidNotificationSound('keep_beep'),
+    sound: RawResourceAndroidNotificationSound('alarm_60s'),
     audioAttributesUsage: AudioAttributesUsage.alarm,
     enableVibration: true,
   );
   static const _details = AndroidNotificationDetails(
     _channelId,
     '待办提醒',
-    channelDescription: '语音待办的定时提醒',
+    channelDescription: '语音待办的定时提醒（到点响 1 分钟闹钟音）',
+    importance: Importance.max,
+    priority: Priority.high,
+    playSound: true,
+    sound: RawResourceAndroidNotificationSound('alarm_60s'),
+    audioAttributesUsage: AudioAttributesUsage.alarm,
+    enableVibration: true,
+  );
+  static const _testDetails = AndroidNotificationDetails(
+    _channelId,
+    '待办提醒',
+    channelDescription: '语音待办的定时提醒（到点响 1 分钟闹钟音）',
     importance: Importance.max,
     priority: Priority.high,
     playSound: true,
@@ -70,8 +81,9 @@ class ReminderService {
       await android?.requestNotificationsPermission();
       // pm clear / 重装会清掉频道；启动时显式重建，确保接收器触发时频道存在
       await android?.createNotificationChannel(_channel);
-      // 清理旧版频道（长默认铃声）
+      // 清理历史版本频道
       await android?.deleteNotificationChannel('reminders');
+      await android?.deleteNotificationChannel('reminders_v2');
     }
   }
 
@@ -103,13 +115,13 @@ class ReminderService {
     );
   }
 
-  /// 立即发一条测试通知，验证通知链路。
+  /// 立即发一条测试通知，验证通知链路（短音，不响满 1 分钟）。
   Future<void> testNotification() async {
     await _plugin.show(
       99999,
       '测试通知',
       '看到这条说明通知链路正常',
-      _details,
+      const NotificationDetails(android: _testDetails),
     );
   }
 
