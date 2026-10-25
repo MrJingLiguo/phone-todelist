@@ -54,7 +54,13 @@ class ReminderService {
           AndroidFlutterLocalNotificationsPlugin>();
       await android?.requestNotificationsPermission();
       // pm clear / 重装会清掉频道；启动时显式重建，确保接收器触发时频道存在
-      await android?.createNotificationChannel(_channel);
+      await android?.createNotificationChannel(const AndroidNotificationChannel(
+        'reminders',
+        '待办提醒',
+        description: '语音待办的定时提醒',
+        importance: Importance.max,
+        enableVibration: true,
+      ));
     }
   }
 
