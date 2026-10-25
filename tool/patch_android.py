@@ -297,6 +297,21 @@ def patch_minify():
             print("%s -> %s" % (os.path.relpath(p, ROOT), hits))
 
 
+def patch_raw_sound():
+    """把仓库里的提示音复制到 res/raw（构建产物目录每次重新生成）。"""
+    src = os.path.join(ROOT, "assets", "sounds", "keep_beep.wav")
+    if not os.path.exists(src):
+        print("WARN: keep_beep.wav not found in assets/sounds")
+        return
+    d = os.path.join(APP_MAIN, "res", "raw")
+    os.makedirs(d, exist_ok=True)
+    dst = os.path.join(d, "keep_beep.wav")
+    write_bytes = open(src, "rb").read()
+    with open(dst, "wb") as f:
+        f.write(write_bytes)
+    print("res/raw/keep_beep.wav copied (%d bytes)" % len(write_bytes))
+
+
 def patch_desugaring():
     """flutter_local_notifications 要求开启 core library desugaring。"""
     for name, kts in [("build.gradle.kts", True), ("build.gradle", False)]:
@@ -345,3 +360,4 @@ if __name__ == "__main__":
     patch_desugaring()
     patch_signing()
     patch_minify()
+    patch_raw_sound()

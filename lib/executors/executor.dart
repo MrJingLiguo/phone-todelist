@@ -35,14 +35,29 @@ class ExecResult {
 class ReminderService {
   final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
 
-  static const _channel = AndroidNotificationDetails(
-    'reminders',
+  /// 频道设置创建后不可变：换提示音/音量通道时必须换新 id
+  static const _channelId = 'reminders_v2';
+  static const _channel = AndroidNotificationChannel(
+    _channelId,
+    '待办提醒',
+    description: '语音待办的定时提醒',
+    importance: Importance.max,
+    playSound: true,
+    sound: RawResourceAndroidNotificationSound('keep_beep'),
+    audioAttributesUsage: AudioAttributesUsage.alarm,
+    enableVibration: true,
+  );
+  static const _details = AndroidNotificationDetails(
+    _channelId,
     '待办提醒',
     channelDescription: '语音待办的定时提醒',
     importance: Importance.max,
     priority: Priority.high,
+    playSound: true,
+    sound: RawResourceAndroidNotificationSound('keep_beep'),
+    audioAttributesUsage: AudioAttributesUsage.alarm,
+    enableVibration: true,
   );
-  static const _details = NotificationDetails(android: _channel);
 
   Future<void> init() async {
     await _plugin.initialize(
@@ -54,13 +69,9 @@ class ReminderService {
           AndroidFlutterLocalNotificationsPlugin>();
       await android?.requestNotificationsPermission();
       // pm clear / 重装会清掉频道；启动时显式重建，确保接收器触发时频道存在
-      await android?.createNotificationChannel(const AndroidNotificationChannel(
-        'reminders',
-        '待办提醒',
-        description: '语音待办的定时提醒',
-        importance: Importance.max,
-        enableVibration: true,
-      ));
+      await android?.createNotificationChannel(_channel);
+      // 清理旧版频道（长默认铃声）
+      await android?.deleteNotificationChannel('reminders');
     }
   }
 
