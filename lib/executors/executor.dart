@@ -35,6 +35,15 @@ class ExecResult {
 class ReminderService {
   final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
 
+  static const _channel = AndroidNotificationDetails(
+    'reminders',
+    '待办提醒',
+    channelDescription: '语音待办的定时提醒',
+    importance: Importance.max,
+    priority: Priority.high,
+  );
+  static const _details = NotificationDetails(android: _channel);
+
   Future<void> init() async {
     await _plugin.initialize(
       const InitializationSettings(
@@ -44,6 +53,8 @@ class ReminderService {
       final android = _plugin.resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>();
       await android?.requestNotificationsPermission();
+      // pm clear / 重装会清掉频道；启动时显式重建，确保接收器触发时频道存在
+      await android?.createNotificationChannel(_channel);
     }
   }
 
@@ -66,20 +77,22 @@ class ReminderService {
       '待办提醒',
       title,
       tz.TZDateTime.from(at, AppTz.local),
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'reminders',
-          '待办提醒',
-          channelDescription: '语音待办的定时提醒',
-          importance: Importance.max,
-          priority: Priority.high,
-        ),
-      ),
+      _details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       matchDateTimeComponents: comp,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       payload: 'task:$id',
+    );
+  }
+
+  /// 立即发一条测试通知，验证通知链路。
+  Future<void> testNotification() async {
+    await _plugin.show(
+      99999,
+      '测试通知',
+      '看到这条说明通知链路正常',
+      _details,
     );
   }
 

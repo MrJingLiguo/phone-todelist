@@ -32,6 +32,18 @@ class SettingsPage extends StatelessWidget {
               );
             },
           ),
+          ListTile(
+            leading: const Icon(Icons.notifications_active),
+            title: const Text('发送测试通知'),
+            subtitle: const Text('立即验证通知链路是否正常'),
+            onTap: () async {
+              await context
+                  .read<AppState>()
+                  .executor
+                  .reminders
+                  .testNotification();
+            },
+          ),
           const ListTile(
             leading: Icon(Icons.bug_report_outlined),
             title: Text('小米/红米（MIUI）必读'),
