@@ -203,11 +203,18 @@ def patch_signing():
     print("WARN: no gradle file for signing patch")
 
 
-def patch_minify():
-    """关闭 release 混淆：R8 会剥掉插件 Gson 泛型，导致排定提醒报 Missing type parameter。
+PROGUARD_RULES = """# flutter_local_notifications：R8 下保住 Gson 反射所需类型信息
+-keep class com.dexterous.flutterlocalnotifications.** { *; }
+-keep class com.google.gson.** { *; }
+-keep class * extends com.google.gson.reflect.TypeToken
+"""
 
-    新版模板可能把 isShrinkResources/isMinifyEnabled 放在根 build.gradle.kts，
-    因此根和 app 两级 gradle 都做全局替换。
+
+def patch_minify():
+    """关闭 release 混淆/资源收缩，并写入 proguard keeps（双保险）。
+
+    R8（哪怕 full mode 只做部分处理）会剥掉 flutter_local_notifications
+    持久化通知用的 Gson 泛型签名，导致排定提醒报 Missing type parameter。
     """
     targets = [
         (os.path.join(ANDROID, "build.gradle.kts"), True),
@@ -215,7 +222,6 @@ def patch_minify():
         (os.path.join(ANDROID, "app", "build.gradle.kts"), True),
         (os.path.join(ANDROID, "app", "build.gradle"), False),
     ]
-    patched = False
     for p, kts in targets:
         if not os.path.exists(p):
             continue
@@ -229,11 +235,46 @@ def patch_minify():
         if new != text:
             write(p, new)
             print("%s: minify/shrink disabled" % os.path.relpath(p, ROOT))
-            patched = True
         else:
             print("%s: no minify/shrink lines" % os.path.relpath(p, ROOT))
-    if not patched:
-        print("WARN: no gradle file contained minify/shrink settings")
+
+    # app 级 release 块显式兜底 + 挂 proguard 规则
+    for p, kts in [(os.path.join(ANDROID, "app", "build.gradle.kts"), True),
+                   (os.path.join(ANDROID, "app", "build.gradle"), False)]:
+        if not os.path.exists(p):
+            continue
+        text = read(p)
+        changed = False
+        if "isMinifyEnabled" not in text and "minifyEnabled" not in text:
+            if kts:
+                text = re.sub(r"(release\s*\{)", r"\1\n        isMinifyEnabled = false\n        isShrinkResources = false", text, count=1)
+            else:
+                text = re.sub(r"(release\s*\{)", r"\1\n        minifyEnabled false\n        shrinkResources false", text, count=1)
+            changed = True
+        if "proguard-rules.pro" not in text:
+            if kts:
+                text = re.sub(r"(release\s*\{)",
+                              r"\1\n        proguardFiles(getDefaultProguardFile(\"proguard-android-optimize.txt\"), \"proguard-rules.pro\")",
+                              text, count=1)
+            else:
+                text = re.sub(r"(release\s*\{)",
+                              r"\1\n        proguardFiles getDefaultProguardFile(\"proguard-android-optimize.txt\"), \"proguard-rules.pro\"",
+                              text, count=1)
+            changed = True
+        if changed:
+            write(p, text)
+            print("%s: explicit minify=false + proguardFiles ensured" % os.path.relpath(p, ROOT))
+
+    rules = os.path.join(ANDROID, "app", "proguard-rules.pro")
+    write(rules, PROGUARD_RULES)
+    print("proguard-rules.pro written")
+
+    # 打印实际生效内容便于诊断
+    for p in [os.path.join(ANDROID, "build.gradle.kts"), os.path.join(ANDROID, "app", "build.gradle.kts")]:
+        if os.path.exists(p):
+            t = read(p)
+            hits = [ln for ln in t.splitlines() if re.search(r"[Mm]inify|[Ss]hrink|[Pp]roguard", ln)]
+            print("%s -> %s" % (os.path.relpath(p, ROOT), hits))
 
 
 def patch_desugaring():
