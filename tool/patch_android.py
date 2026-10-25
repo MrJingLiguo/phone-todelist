@@ -215,6 +215,8 @@ def patch_minify():
                 print("%s: minify already disabled" % name)
                 return
             new = re.sub(r"isMinifyEnabled\s*=\s*true", "isMinifyEnabled = false", text)
+            # 资源收缩依赖 R8，必须一并关闭
+            new = re.sub(r"isShrinkResources\s*=\s*true", "isShrinkResources = false", new)
             if new == text:
                 new = re.sub(r"(release\s*\{)", r"\1\n        isMinifyEnabled = false", text, count=1)
         else:
@@ -222,6 +224,7 @@ def patch_minify():
                 print("%s: minify already disabled" % name)
                 return
             new = re.sub(r"minifyEnabled\s+true", "minifyEnabled false", text)
+            new = re.sub(r"shrinkResources\s+true", "shrinkResources false", new)
             if new == text:
                 new = re.sub(r"(release\s*\{)", r"\1\n        minifyEnabled false", text, count=1)
         if new != text:
