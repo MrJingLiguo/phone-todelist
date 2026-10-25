@@ -106,7 +106,7 @@ class ReminderService {
       '待办提醒',
       title,
       tz.TZDateTime.from(at, AppTz.local),
-      _details,
+      const NotificationDetails(android: _details),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       matchDateTimeComponents: comp,
       uiLocalNotificationDateInterpretation:
